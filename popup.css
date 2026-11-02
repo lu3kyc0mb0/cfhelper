@@ -1,0 +1,11 @@
+html { width: 440px; max-width: 100vw; }
+body.cfh-popup { width: 440px; max-width: 100vw; max-height: 560px; overflow-y: auto; overflow-x: hidden; }
+.cfh-popup #cf-helper { margin: 0; padding: 10px; }
+.cfh-popup #cf-helper .cfh-settings { margin: 0; border: 0; padding: 2px; }
+.cfh-popup #cf-helper .cfh-settings-title { gap: 12px; }
+.cfh-popup #cf-helper .cfh-settings-title img { width: 54px; height: 54px; }
+.cfh-popup #cf-helper h2 { font-size: 16px; }
+.cfh-popup #cf-helper .cfh-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.cfh-popup #cf-helper .cfh-actions { align-items: end; }
+.cfh-popup #cf-helper .cfh-actions > label { flex: 1 1 100%; }
+.cfh-popup #cf-helper .cfh-actions button { white-space: normal; max-width: 100%; }

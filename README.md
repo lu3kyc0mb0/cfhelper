@@ -8,7 +8,7 @@ Firefox 140+ extension that adds tools to the Codeforces problem archive.
 2. Choose **Load Temporary Add-on…** and select `manifest.json`.
 3. Reload [Codeforces Problemset](https://codeforces.com/problemset).
 
-**Filters**, **Sort by**, **Practice statistics** and **Settings** appear above the existing problem table. Filters and sorting cover the full API archive. **Original archive** restores the actual original DOM nodes and pagination, including the site's own functionality. The extension's filters operate independently of the Codeforces sidebar. Gym, private groups and acmsguru are outside its scope.
+**Filters**, **Sort by** and **Practice statistics** appear above the existing problem table. Filters and sorting cover the full API archive. **Original archive** restores the actual original DOM nodes and pagination, including the site's own functionality. The extension's filters operate independently of the Codeforces sidebar. Gym, private groups and acmsguru are outside its scope.
 
 To update an unpacked copy, click **Reload** in `about:debugging`, then reload Codeforces. Temporary installations disappear after restarting Firefox. Permanent installation in standard Firefox requires Mozilla signing; this ZIP is unsigned.
 
@@ -23,32 +23,14 @@ To update an unpacked copy, click **Reload** in `about:debugging`, then reload C
 - 25, 50 or 100 rendered problems per page, plus compact rows. Pagination bounds DOM size instead of rendering the entire archive.
 - Manual task marks have been removed. Old `progress` data is discarded and never interpreted as an Accepted result.
 
-## Settings and themes
+## Settings
 
-Settings open inline on Codeforces. They are also available in Firefox's add-on Preferences (`about:addons`).
+Open Firefox’s Extensions menu (puzzle icon), then click **Codeforces Helper** to change settings in its popup. You can also pin the extension and open the popup from its toolbar icon. There is no Settings button on the Codeforces page. Add-on Preferences (`about:addons`) remain available. Changes apply immediately to open archive pages.
 
 - **Extension language:** English or Russian, applied immediately. This changes the extension's UI, not Codeforces's own menus, problem names or tag names.
-- **Theme:** Codeforces default, Light, Dark, Follow system or Custom. Themes apply to the archive page and add-on settings; contest and submission pages are untouched.
-- **Custom palettes:** edit seven colour pickers, import a `.json` palette or export one. Only hex colours are accepted; arbitrary CSS, scripts, URLs and remote resources are not supported. Your chosen colours determine readability.
 - **Export:** download the filtered task list or bookmarked tasks as `.txt`. All matching cached tasks are exported, not just the current page. No data is sent to a server for export. The standalone Preferences view exports using the saved filters and cached archive.
 
-Example theme format:
-
-```json
-{
-  "format": "cfhelper-theme",
-  "version": "1.0.0",
-  "colors": {
-    "background": "#17241d",
-    "surface": "#203128",
-    "text": "#e1eee6",
-    "muted": "#acbcaf",
-    "border": "#4b6654",
-    "link": "#a5d0b5",
-    "stripe": "#283c30"
-  }
-}
-```
+The extension retains Codeforces styling. Colour themes and custom palettes are not included.
 
 ## Public practice history
 
@@ -67,7 +49,7 @@ Only two anonymous GET endpoints are implemented:
 
 The [official API limit](https://codeforces.com/apiHelp) is **one request per two seconds**, not five requests per second. The supplied brainstorming document's proposed 200–300 ms interval is therefore not used. Both endpoints share a serial queue with at least 2.5 seconds between request starts. The last-request time persists across background restarts; concurrent catalogue requests are deduplicated. HTTP 403/429/503 and API rate-limit responses produce a cooldown without automatic retries. The limiter only controls this extension, not other programs sharing the same IP.
 
-The catalogue is cached for six hours and remains usable after a failed refresh. A history snapshot is stored locally; network refreshes are explicit. Both endpoints have a 25-second timeout. Filters, bookmarks, collections, preferences, palettes, snapshots and rate-limit timestamps stay in `browser.storage.local`. There are no developer servers, analytics or remote scripts. HTTP connection metadata is naturally visible to Codeforces. Exports are local downloads.
+The catalogue is cached for six hours and remains usable after a failed refresh. A history snapshot is stored locally; network refreshes are explicit. Both endpoints have a 25-second timeout. Filters, bookmarks, collections, preferences, snapshots and rate-limit timestamps stay in `browser.storage.local`. There are no developer servers, analytics or remote scripts. HTTP connection metadata is naturally visible to Codeforces. Exports are local downloads.
 
 Permissions are limited to local extension storage and `https://codeforces.com/*`. Firefox's data disclosure declares `authenticationInfo` because a manually entered username/handle can be transmitted to Codeforces. No passwords, session tokens or cookies are collected. Entering a handle is optional; archive filtering works without one.
 
@@ -81,18 +63,14 @@ Designed for independent practice using the [contest rules](https://codeforces.c
 
 ## Development and validation
 
-Runtime JavaScript/CSS is dependency-free. `core.js` contains filtering and aggregation, `background.js` the API queue, `i18n.js` translations, `ui.js` palette validation and DOM helpers, `settings.js` shared preferences, and `content.js` native table integration.
+Runtime JavaScript/CSS is dependency-free. `core.js` contains filtering and aggregation, `background.js` the API queue, `i18n.js` translations, `ui.js` preferences validation and DOM helpers, `settings.js` shared preferences, and `content.js` native table integration.
 
 ```sh
-node --test
-python scripts/build.py
-# Optional Mozilla validator:
 npm install
 npm run lint:extension
+npm run build
 ```
 
-The build script creates a ZIP from an explicit file list, checks the package version and verifies ZIP integrity. No dependency installation or build step is required to load the source extension.
+The build command creates `dist/cfhelper-firefox-1.0.0.zip` using web-ext. No build step is required to load the source extension.
 
-Browser integration tests run when Playwright and Chromium are available (`npm install --no-save playwright`, then `npx playwright install chromium`). `CFHELPER_PLAYWRIGHT` can point to an existing Playwright installation; `CFHELPER_BROWSER` can point to an existing Chromium/Edge executable. Tests use a representative local Codeforces DOM fixture and a mocked extension API. They verify native restoration, language/theme changes, palette validation, history filtering, exports, limited network calls and inert contest routes; these are not a substitute for a Firefox test against the live site. Visual snapshots are written to `dist/screenshots` and are not bundled.
-
-Manual Firefox checks: reload the add-on and archive; test Filters and standalone sorting; open inline Settings and add-on Preferences; switch languages and themes; import a palette; connect a handle and load older history; export bookmarks; restore the native table. Test an unavailable API with and without a previous cache. Mozilla signing and live Firefox verification remain separate release steps.
+Manual Firefox checks: reload the add-on and archive; test Filters and standalone sorting; open the extension popup and add-on Preferences; switch languages; change row density; connect a handle and load older history; export bookmarks; restore the native table. Test an unavailable API with and without a previous cache. Mozilla signing and live Firefox verification remain separate release steps.

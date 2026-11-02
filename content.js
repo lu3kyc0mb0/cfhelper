@@ -3,7 +3,7 @@
   const table=document.querySelector('#pageContent table.problems');
   if(!table)return;
   const {defaults,cleanFilters,filterProblems,problemUrl,tagStats}=globalThis.CFHelper;
-  const {el,select,cleanPrefs,applyTheme}=globalThis.CFUI;
+  const {el,select,cleanPrefs,applyLayout}=globalThis.CFUI;
   const host=el('section',{id:'cf-helper'}),anchor=table.closest('.datatable') || table;
   anchor.before(host);
   const pager=el('nav',{class:'cfh-pages',hidden:true}); anchor.after(pager);
@@ -12,8 +12,8 @@
   const nativeClasses=new Map();
   for(const row of table.rows) {const link=row.querySelector('a[href*="/problemset/problem/"]');const match=link?.getAttribute('href').match(/\/problemset\/problem\/(\d+)\/([A-Za-z0-9]+)/);if(match)nativeClasses.set(match[1]+match[2],row.className);}
   let prefs=cleanPrefs(),filters=structuredClone(defaults),favorites=[],presets=[],history=null,problems=[],results=[];
-  let page=1,ready=false,active=false,wanted=false,loading=false,filterOpen=false,settingsOpen=false,statsOpen=false,initialized=false;
-  let snapshot=0,stale=false,statusKey='',statusError=false,search='',settingsController;
+  let page=1,ready=false,active=false,wanted=false,loading=false,filterOpen=false,statsOpen=false,initialized=false;
+  let snapshot=0,stale=false,statusKey='',statusError=false,search='';
   let writes=Promise.resolve();
   const t=(key,values)=>globalThis.CFText.t(prefs.language,key,values);
   const $=role=>host.querySelector(`[data-role="${role}"]`);
@@ -93,7 +93,7 @@
   }
   function restore(){wanted=false;if(active)table.replaceChildren(...originals);active=false;nativePagination.forEach(({node,hidden})=>{node.hidden=hidden;});pager.hidden=true;filterOpen=false;status('');renderUI();}
   function preferencesChanged(next){
-    const old=prefs;prefs=cleanPrefs(next);applyTheme(prefs);
+    const old=prefs;prefs=cleanPrefs(next);applyLayout(prefs);
     if(old.language!==prefs.language)renderUI();
     if(active && (old.pageSize!==prefs.pageSize || old.language!==prefs.language))apply();
   }
@@ -101,7 +101,7 @@
   function renderUI(){
     host.replaceChildren();host.lang=prefs.language;host.setAttribute('aria-label',t('toolbar'));
     const sort=select(['newest','oldest','ratingAsc','ratingDesc','popular','rare','name'].map(k=>[k,t(k)]),filters.sort,{name:'sort','data-role':'sort',disabled:!initialized,onchange:async e=>{filters.sort=e.target.value;wanted=true;$('restore').hidden=false;if(ready)apply();else{save({filters:structuredClone(filters)});await load();}}});
-    const bar=el('div',{class:'cfh-bar'},el('img',{class:'cfh-brand',src:browser.runtime.getURL('cfhelper.png'),alt:'Codeforces Helper',width:32,height:32}),button('filters',async()=>{filterOpen=!filterOpen;$('form').hidden=!filterOpen;$('toggle').setAttribute('aria-expanded',String(filterOpen));if(filterOpen){wanted=true;$('restore').hidden=false;if(ready)apply();else await load();}},{'data-role':'toggle','aria-controls':'cfh-panel','aria-expanded':String(filterOpen),disabled:!initialized}),field('sort',sort),el('span',{class:'cfh-summary','data-role':'summary'},active?t('found',{count:results.length}):''),button('restore',restore,{'data-role':'restore',hidden:!wanted}),button('statistics',()=>{statsOpen=!statsOpen;renderStats();},{'data-role':'stats-toggle','aria-controls':'cfh-statistics'}),button('settings',()=>{settingsOpen=!settingsOpen;$('settings-panel').hidden=!settingsOpen;$('settings-toggle').setAttribute('aria-expanded',String(settingsOpen));},{'data-role':'settings-toggle','aria-controls':'cfh-settings-panel','aria-expanded':String(settingsOpen),disabled:!initialized}));
+    const bar=el('div',{class:'cfh-bar'},el('img',{class:'cfh-brand',src:browser.runtime.getURL('cfhelper.png'),alt:'Codeforces Helper',width:32,height:32}),button('filters',async()=>{filterOpen=!filterOpen;$('form').hidden=!filterOpen;$('toggle').setAttribute('aria-expanded',String(filterOpen));if(filterOpen){wanted=true;$('restore').hidden=false;if(ready)apply();else await load();}},{'data-role':'toggle','aria-controls':'cfh-panel','aria-expanded':String(filterOpen),disabled:!initialized}),field('sort',sort),el('span',{class:'cfh-summary','data-role':'summary'},active?t('found',{count:results.length}):''),button('restore',restore,{'data-role':'restore',hidden:!wanted}),button('statistics',()=>{statsOpen=!statsOpen;renderStats();},{'data-role':'stats-toggle','aria-controls':'cfh-statistics'}));
     bar.querySelector('label').className='cfh-sort';
     const form=el('form',{id:'cfh-panel',class:'cfh-panel','data-role':'form',hidden:!filterOpen,onsubmit:e=>e.preventDefault(),oninput:e=>{const c=e.target;if(!(c.name in filters))return;filters[c.name]=c.type==='checkbox'?c.checked:c.value;apply();}},
       el('div',{class:'cfh-grid'},field('query',control('query',t('query'),'search')),field('number',control('number','1900A / 1900')),field('index',control('index','A, B, C1')),range('rating','rating'),range('solved','solvedCount'),range('contest','contest'),field('unrated',select([['include',t('include')],['exclude',t('exclude')],['only',t('only')]],filters.unrated,{name:'unrated'})),field('solvedFilter',select([['all',t('anyStatus')],['solved',t('accepted')],['unsolved',t('noAC')],['attempted',t('attempted')]],filters.accepted,{name:'accepted'}))),
@@ -109,9 +109,7 @@
       el('div',{class:'cfh-tags-head'},el('strong',{},t('tags')),select([['all',t('all')],['any',t('any')]],filters.tagMode,{name:'tagMode','aria-label':t('tags')}),el('input',{type:'search',value:search,placeholder:t('tagSearch'),'aria-label':t('tagSearch'),'data-role':'tag-search',oninput:e=>{search=e.target.value;renderTags();}})),el('p',{class:'cfh-hint'},t('tagHint')),el('div',{class:'cfh-tags','data-role':'tags'}),
       el('div',{class:'cfh-actions'},button('reset',()=>{filters=structuredClone(defaults);search='';syncControls();$('tag-search').value='';renderTags();apply();},{'data-role':'reset'}),button('random',()=>{if(results.length)location.assign(problemUrl(results[Math.floor(Math.random()*results.length)]));},{'data-role':'random',disabled:!results.length}),button('refresh',()=>load(true),{'data-role':'refresh',disabled:loading})),
       el('div',{class:'cfh-presets'},el('input',{maxLength:60,placeholder:t('presetName'),'aria-label':t('presetName'),'data-role':'preset-name'}),button('save',()=>{const name=$('preset-name').value.trim(),error=validate();if(!name || error){status(error || 'presetError',true);return;}if(presets.length>=30){status('presetLimit',true);return;}presets.push({name,filters:structuredClone(filters)});save({presets:structuredClone(presets)});renderPresets();$('preset-name').value='';status('saved');},{'data-role':'save'}),el('select',{'data-role':'presets','aria-label':t('presets'),onchange:e=>{const v=e.target.value;$('delete').disabled=v==='';if(v!==''){filters=cleanFilters(presets[+v].filters);syncControls();renderTags();apply();}}}),button('remove',()=>{const v=$('presets').value;if(v==='')return;presets.splice(+v,1);save({presets:structuredClone(presets)});renderPresets();},{'data-role':'delete',disabled:true})),el('p',{class:'cfh-hint'},t('archiveHint')));
-    const settings=el('div',{id:'cfh-settings-panel','data-role':'settings-panel',hidden:!settingsOpen});
-    host.append(bar,form,settings,el('div',{id:'cfh-statistics',class:'cfh-panel','data-role':'statistics',hidden:!statsOpen}),el('p',{class:'cfh-hint','data-role':'coverage',hidden:!history},historyText()),el('p',{class:'cfh-status','data-role':'status',role:'status','aria-live':'polite',hidden:!statusKey},statusKey?t(statusKey):''));
-    settingsController=globalThis.CFSettings(settings,prefs,{onClose:()=>{settingsOpen=false;settings.hidden=true;$('settings-toggle').setAttribute('aria-expanded','false');},onPreferences:preferencesChanged,onHistory:historyChanged,getResults:()=>active?results:[],getFilters:()=>filters});
+    host.append(bar,form,el('div',{id:'cfh-statistics',class:'cfh-panel','data-role':'statistics',hidden:!statsOpen}),el('p',{class:'cfh-hint','data-role':'coverage',hidden:!history},historyText()),el('p',{class:'cfh-status','data-role':'status',role:'status','aria-live':'polite',hidden:!statusKey},statusKey?t(statusKey):''));
     renderTags();renderPresets();renderStats();status(statusKey,statusError);
   }
   async function load(force=false){
@@ -126,13 +124,12 @@
   renderUI();
   browser.storage.local.get(['preferences','filters','favorites','presets','profileCache']).then(saved=>{
     prefs=cleanPrefs(saved.preferences);filters=cleanFilters(saved.filters);favorites=saved.favorites || [];presets=(saved.presets || []).map(p=>({...p,filters:cleanFilters(p.filters)}));history=saved.profileCache || null;
-    initialized=true;applyTheme(prefs);renderUI();
+    initialized=true;applyLayout(prefs);renderUI();
     browser.storage.local.remove('progress').catch(()=>{});
   }).catch(()=>{initialized=true;renderUI();status('readError',true);});
   browser.storage.onChanged?.addListener((changes,area)=>{
     if(area!=='local')return;
-    if(changes.preferences){const next=cleanPrefs(changes.preferences.newValue);if(JSON.stringify(next)!==JSON.stringify(prefs)){preferencesChanged(next);settingsController?.update(next);}}
-    if(changes.profileCache){historyChanged(changes.profileCache.newValue || null);settingsController?.history(history);}
+    if(changes.preferences){const next=cleanPrefs(changes.preferences.newValue);if(JSON.stringify(next)!==JSON.stringify(prefs)){preferencesChanged(next);}}
+    if(changes.profileCache){historyChanged(changes.profileCache.newValue || null);}
   });
-  matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>applyTheme(prefs));
 })();

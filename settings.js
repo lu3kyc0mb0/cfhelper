@@ -1,11 +1,11 @@
 globalThis.CFSettings = (container, initial, callbacks = {}) => {
-  const {el,select,download,cleanPrefs,themeJSON,parseTheme} = globalThis.CFUI;
+  const {el,select,download,cleanPrefs} = globalThis.CFUI;
   let prefs=cleanPrefs(initial), history=null, busy=false, message='', failed=false;
   const t=(key,values)=>globalThis.CFText.t(prefs.language,key,values);
   function notice(key,error=false) { message=key; failed=error; const node=container.querySelector('[data-role=settings-status]'); if(node) {node.textContent=t(key);node.classList.toggle('error',error);} }
   async function change(delta, redraw=false) {
     prefs=cleanPrefs({...prefs,...delta});
-    globalThis.CFUI.applyTheme(prefs); callbacks.onPreferences?.(prefs);
+    globalThis.CFUI.applyLayout(prefs); callbacks.onPreferences?.(prefs);
     if(redraw) render();
     try {
       await browser.storage.local.set({preferences:prefs});
@@ -45,21 +45,14 @@ globalThis.CFSettings = (container, initial, callbacks = {}) => {
     if(callbacks.onClose) title.append(button('close',callbacks.onClose,{class:'cfh-close'}));
     const general=el('div',{class:'cfh-grid'},
       field('language',select([['en','English'],['ru','Русский']],prefs.language,{'data-role':'language',onchange:e=>change({language:e.target.value},true)})),
-      field('theme',select(['native','light','dark','system','custom'].map(k=>[k,t(k)]),prefs.theme,{'data-role':'theme',onchange:e=>change({theme:e.target.value},true)})),
       field('pageSize',select([25,50,100].map(n=>[String(n),String(n)]),String(prefs.pageSize),{'data-role':'page-size',onchange:e=>change({pageSize:Number(e.target.value)})})));
     const compact=el('label',{class:'cfh-check'},el('input',{type:'checkbox',checked:prefs.compact,onchange:e=>change({compact:e.target.checked})}),t('compact'));
-    const colors=el('div',{class:'cfh-palette',hidden:prefs.theme!=='custom'});
-    for(const key of Object.keys(prefs.custom)) colors.append(field(key,el('input',{type:'color',value:prefs.custom[key],'data-color':key,oninput:e=>change({custom:{...prefs.custom,[key]:e.target.value}})})));
-    const file=el('input',{type:'file',accept:'.json,application/json',hidden:true,'data-role':'theme-file',onchange:async e=>{
-      try {const f=e.target.files[0];if(!f)return;if(f.size>20000)throw Error();const custom=parseTheme(await f.text());await change({custom,theme:'custom'},true);notice('themeImported');}catch{notice('invalidTheme',true);}finally{e.target.value='';}
-    }});
-    const themeTools=el('div',{class:'cfh-actions'},button('importTheme',()=>file.click()),button('exportTheme',()=>download('cfhelper-theme.json',themeJSON(prefs.theme==='light'?globalThis.CFUI.palettes.light:prefs.theme==='dark'?globalThis.CFUI.palettes.dark:prefs.custom),'application/json')),file);
     const handle=el('input',{type:'text',value:handleDraft ?? history?.handle ?? '',maxLength:24,placeholder:'tourist','data-role':'handle',disabled:busy});
     const profileTools=el('div',{class:'cfh-actions'},field('handle',handle),button('sync',()=>loadHistory(false),{disabled:busy}),button('older',()=>loadHistory(true),{disabled:busy || !history || history.complete}),button('disconnect',async()=>{
       try {await browser.storage.local.remove('profileCache');history=null;callbacks.onHistory?.(null);message='historyCleared';failed=false;render();}catch{notice('saveError',true);}
     },{disabled:busy || !history}));
     const dataTools=el('div',{class:'cfh-actions'},button('exportResults',()=>exportProblems(false)),button('exportBookmarks',()=>exportProblems(true)));
-    container.append(title,general,compact,colors,themeTools,el('p',{class:'cfh-hint'},t('themeHint')),el('h3',{},t('profile')),profileTools,el('p',{class:'cfh-hint'},t('historyHint')),el('p',{'data-role':'coverage',class:'cfh-hint'},coverage()),el('h3',{},t('data')),dataTools,el('p',{class:'cfh-hint'},t('exportHint')),el('p',{class:'cfh-hint'},t('privacy')),el('p',{class:'cfh-hint'},t('sourceNote')),el('p',{'data-role':'settings-status',role:'status',class:failed?'cfh-status error':'cfh-status'},message?t(message):''));
+    container.append(title,general,compact,el('h3',{},t('profile')),profileTools,el('p',{class:'cfh-hint'},t('historyHint')),el('p',{'data-role':'coverage',class:'cfh-hint'},coverage()),el('h3',{},t('data')),dataTools,el('p',{class:'cfh-hint'},t('exportHint')),el('p',{class:'cfh-hint'},t('privacy')),el('p',{class:'cfh-hint'},t('sourceNote')),el('p',{'data-role':'settings-status',role:'status',class:failed?'cfh-status error':'cfh-status'},message?t(message):''));
   }
   render();
   browser.storage.local.get('profileCache').then(saved=>{history=saved.profileCache || null;render();}).catch(()=>notice('readError',true));

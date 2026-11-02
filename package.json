@@ -1,1 +1,14 @@
-{"name":"cfhelper","version":"1.0.0","private":true,"type":"module","scripts":{"test":"node --test","lint:extension":"web-ext lint --source-dir .","build":"python scripts/build.py"},"devDependencies":{"web-ext":"10.8.0"}}
+{
+  "name": "cfhelper",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "lint:extension": "web-ext lint --source-dir .",
+    "build": "web-ext build --source-dir . --config web-ext.config.cjs --artifacts-dir dist --filename cfhelper-firefox-1.0.0.zip --overwrite-dest"
+  },
+  "devDependencies": {
+    "web-ext": "10.8.0"
+  }
+}
