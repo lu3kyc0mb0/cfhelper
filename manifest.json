@@ -3,7 +3,7 @@
   "name": "CF Helper",
   "version": "1.0.0",
   "description": "Native archive filters, bookmarks, practice history and more for Codeforces.",
-  "browser_specific_settings": {"gecko": {"id": "cfhelper@local.extension", "strict_min_version": "140.0", "data_collection_permissions": {"required": ["authenticationInfo"]}}},
+  "browser_specific_settings": {"gecko": {"id": "cfhelper@lu3kyc0mb0", "strict_min_version": "140.0", "data_collection_permissions": {"required": ["authenticationInfo"]}}},
   "permissions": ["storage"],
   "host_permissions": ["https://codeforces.com/*"],
   "background": {"scripts": ["core.js", "background.js"]},
