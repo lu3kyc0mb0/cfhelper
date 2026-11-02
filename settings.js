@@ -41,7 +41,7 @@ globalThis.CFSettings = (container, initial, callbacks = {}) => {
   function render(handleDraft) {
     container.replaceChildren(); container.classList.add('cfh-settings'); container.lang=prefs.language;
     const field=(key,control)=>el('label',{},el('span',{},t(key)),control);
-    const title=el('div',{class:'cfh-settings-title'},el('img',{src:browser.runtime.getURL('cfhelper.jpg'),alt:'Codeforces Helper',width:82,height:82}),el('div',{},el('h2',{},t('settingsTitle')),el('p',{class:'cfh-hint'},t('version'))));
+    const title=el('div',{class:'cfh-settings-title'},el('img',{src:browser.runtime.getURL(document.body.classList.contains('cfh-popup')?'cfhelper.png':'cfhelper.jpg'),alt:'Codeforces Helper',width:82,height:82}),el('div',{},el('h2',{},t('settingsTitle')),el('p',{class:'cfh-hint'},t('version'))));
     if(callbacks.onClose) title.append(button('close',callbacks.onClose,{class:'cfh-close'}));
     const general=el('div',{class:'cfh-grid'},
       field('language',select([['en','English'],['ru','Русский']],prefs.language,{'data-role':'language',onchange:e=>change({language:e.target.value},true)})),
@@ -52,7 +52,7 @@ globalThis.CFSettings = (container, initial, callbacks = {}) => {
       try {await browser.storage.local.remove('profileCache');history=null;callbacks.onHistory?.(null);message='historyCleared';failed=false;render();}catch{notice('saveError',true);}
     },{disabled:busy || !history}));
     const dataTools=el('div',{class:'cfh-actions'},button('exportResults',()=>exportProblems(false)),button('exportBookmarks',()=>exportProblems(true)));
-    container.append(title,general,compact,el('h3',{},t('profile')),profileTools,el('p',{class:'cfh-hint'},t('historyHint')),el('p',{'data-role':'coverage',class:'cfh-hint'},coverage()),el('h3',{},t('data')),dataTools,el('p',{class:'cfh-hint'},t('exportHint')),el('p',{class:'cfh-hint'},t('privacy')),el('p',{class:'cfh-hint'},t('sourceNote')),el('p',{'data-role':'settings-status',role:'status',class:failed?'cfh-status error':'cfh-status'},message?t(message):''));
+    container.append(title,el('section',{class:'cfh-settings-section'},el('h3',{},t('archiveSettings')),general,compact),el('section',{class:'cfh-settings-section'},el('h3',{},t('profile')),profileTools,el('p',{class:'cfh-hint'},t('historyHint')),el('p',{'data-role':'coverage',class:'cfh-hint'},coverage())),el('section',{class:'cfh-settings-section'},el('h3',{},t('data')),dataTools,el('p',{class:'cfh-hint'},t('exportHint'))),el('p',{'data-role':'settings-status',role:'status',class:failed?'cfh-status error':'cfh-status'},message?t(message):''));
   }
   render();
   browser.storage.local.get('profileCache').then(saved=>{history=saved.profileCache || null;render();}).catch(()=>notice('readError',true));

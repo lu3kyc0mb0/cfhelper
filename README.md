@@ -2,6 +2,8 @@
 
 A Firefox extension for filtering the Codeforces problem archive.
 
+Filters appear in the Codeforces sidebar. Sorting sits above the problem table.
+
 ## Install
 
 1. Open `about:debugging#/runtime/this-firefox` in Firefox.
