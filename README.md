@@ -14,6 +14,10 @@ Filters appear in the Codeforces sidebar. Sorting sits above the problem table.
 
 ## Install
 
+Install [CF Helper from Mozilla Add-ons](https://addons.mozilla.org/en-US/firefox/addon/cf-helper/), then open or reload the [Codeforces problemset](https://codeforces.com/problemset).
+
+### Temporary installation (for development)
+
 1. Open `about:debugging#/runtime/this-firefox` in Firefox.
 2. Click **Load Temporary Add-on** and select `manifest.json`.
 3. Open or reload the [Codeforces problemset](https://codeforces.com/problemset).
