@@ -1,0 +1,60 @@
+{
+  "manifest_version": 3,
+  "name": "CF Helper",
+  "version": "1.0.0",
+  "description": "Native archive filters, bookmarks, practice history and more for Codeforces.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://codeforces.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "48": "cfhelper.png",
+    "96": "cfhelper.png",
+    "128": "cfhelper.png"
+  },
+  "action": {
+    "default_title": "CF Helper",
+    "default_icon": "cfhelper.png",
+    "default_popup": "popup.html"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://codeforces.com/problemset",
+        "https://codeforces.com/problemset?*",
+        "https://codeforces.com/problemset/",
+        "https://codeforces.com/problemset/?*",
+        "https://codeforces.com/problemset/page/*"
+      ],
+      "js": [
+        "core.js",
+        "i18n.js",
+        "ui.js",
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "cfhelper.png"
+      ],
+      "matches": [
+        "https://codeforces.com/*"
+      ]
+    }
+  ],
+  "minimum_chrome_version": "120"
+}

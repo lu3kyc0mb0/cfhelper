@@ -5,8 +5,12 @@
   "type": "module",
   "scripts": {
     "test": "node --test",
-    "lint:extension": "web-ext lint --source-dir .",
-    "build": "web-ext build --source-dir . --config web-ext.config.cjs --artifacts-dir dist --filename cfhelper-firefox-1.0.0.zip --overwrite-dest"
+    "test:edge": "node scripts/smoke-edge.js",
+    "lint:extension": "web-ext lint --source-dir firefox",
+    "build": "node scripts/build.js",
+    "build:firefox": "node scripts/build.js firefox",
+    "build:chrome": "node scripts/build.js chromium",
+    "build:chromium": "node scripts/build.js chromium"
   },
   "devDependencies": {
     "web-ext": "10.8.0"

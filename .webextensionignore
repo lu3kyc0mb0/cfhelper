@@ -1,9 +1,0 @@
-.git/**
-node_modules/**
-tests/**
-dist/**
-web-ext-artifacts/**
-package*.json
-README.md
-.gitignore
-.webextensionignore

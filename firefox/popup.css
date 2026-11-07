@@ -1,0 +1,7 @@
+html{width:390px;max-width:100vw}
+body.cfh-popup{width:390px;max-width:100vw;max-height:560px;overflow-y:auto;overflow-x:hidden}
+.cfh-popup #cf-helper{margin:0;padding:14px 16px}
+.cfh-popup #cf-helper .cfh-settings-title img{width:46px;height:46px;background:transparent;border:0}
+.cfh-popup #cf-helper h2{font-size:16px}
+.cfh-popup #cf-helper .cfh-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.cfh-popup #cf-helper .cfh-actions button{white-space:normal;max-width:100%}
