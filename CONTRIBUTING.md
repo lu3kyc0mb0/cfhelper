@@ -54,7 +54,7 @@ Run the regression tests and Firefox validator after relevant code changes. Run 
 
 The Edge helper requires Node.js 22.4+ for its built-in WebSocket client and an installed Edge browser. Set `EDGE_BINARY` if Edge is installed outside the helper's default Windows path.
 
-`npm run build` creates separate ZIPs in `dist/`, named using each manifest's version, for example `cfhelper-firefox-1.0.0.zip` and `cfhelper-chromium-1.0.0.zip`. To invoke the underlying packaging tool directly:
+`npm run build` creates separate ZIPs in `dist/`, named using each manifest's version, for example `cfhelper-firefox-1.0.3.zip` and `cfhelper-chromium-1.0.3.zip`. To invoke the underlying packaging tool directly:
 
 ```sh
 npx web-ext build --source-dir firefox --artifacts-dir dist --filename cfhelper-firefox.zip --overwrite-dest

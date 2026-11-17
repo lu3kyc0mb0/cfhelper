@@ -1,6 +1,7 @@
 importScripts('core.js');
 
 const API_GAP = 2500, CACHE_TTL = 6 * 60 * 60 * 1000;
+const PROFILE_TTL = 5 * 60 * 1000;
 let queue = Promise.resolve();
 const pending = new Map();
 let profileRequest = '';
@@ -67,13 +68,34 @@ function profile(handle, older, force) {
     const cache = saved?.handle.toLowerCase() === handle.toLowerCase() ? saved : null;
     if (older && !cache) throw new Error('SYNC_FIRST');
     if (older && cache.complete) return cache;
-    if (!older && !force && cache && Date.now() - cache.time < 15 * 60 * 1000) return cache;
-    const from = older ? cache.offset + 1 : 1;
-    const data = await api('user.status', { handle, from: String(from), count: '1000' });
-    if (!Array.isArray(data)) throw new Error('INVALID_RESPONSE');
-    const summary = globalThis.CFHelper.summarizeSubmissions(data, older ? cache : null);
-    const result = { ...summary, handle, offset: from - 1 + data.length, complete: data.length < 1000, time: Date.now() };
+    if (!older && !force && cache && Date.now() - cache.time < PROFILE_TTL) return cache;
+    let from = older ? cache.offset + 1 : 1, added = 0, ended = false, found = false;
+    let summary = cache, latestId = cache?.latestId ?? null;
+    do {
+      const data = await api('user.status', { handle, from: String(from), count: '1000' });
+      if (!Array.isArray(data)) throw new Error('INVALID_RESPONSE');
+      if (from === 1) latestId = data[0]?.id ?? latestId;
+      summary = globalThis.CFHelper.summarizeSubmissions(data, summary);
+      ended = data.length < 1000;
+      const overlap = !older && cache?.latestId != null ? data.findIndex(s => s.id === cache.latestId) : -1;
+      found = overlap !== -1;
+      added += found ? overlap : data.length;
+      from += data.length;
+    } while (!older && cache?.latestId != null && !found && !ended);
+    const offset = older ? cache.offset + added : found ? cache.offset + added : cache && cache.latestId == null ? Math.max(cache.offset, added) : added;
+    const result = { ...summary, handle, latestId, offset, complete: !!cache?.complete || ended, time: Date.now() };
+    const current = (await chrome.storage.local.get('profileCache')).profileCache;
+    if (JSON.stringify(current) !== JSON.stringify(saved)) throw new Error('PROFILE_CHANGED');
     await chrome.storage.local.set({ profileCache: result }); return result;
+  });
+}
+function autoProfile() {
+  return once('profile-auto', async () => {
+    const { preferences, profileCache: cache, profileAutoAttempt } = await chrome.storage.local.get(['preferences', 'profileCache', 'profileAutoAttempt']);
+    if (preferences?.autoSync === false || !cache?.handle || pending.has('profile')) return cache ?? null;
+    if (Date.now() - cache.time < PROFILE_TTL || (profileAutoAttempt?.handle === cache.handle && Date.now() - profileAutoAttempt.time < PROFILE_TTL)) return cache;
+    await chrome.storage.local.set({ profileAutoAttempt: { handle: cache.handle, time: Date.now() } });
+    return profile(cache.handle, false, false);
   });
 }
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -81,6 +103,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   let task;
   if (message?.type === 'catalogue') task = catalogue(message.force === true);
   else if (message?.type === 'profile') task = profile(message.handle, message.older === true, message.force === true);
+  else if (message?.type === 'profile-auto') task = autoProfile();
   else return;
   task.then(data => sendResponse({ ok: true, data }), error => sendResponse({ ok: false, error: error.message }));
   return true;

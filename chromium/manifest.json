@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CF Helper",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "Native archive filters, bookmarks, practice history and more for Codeforces.",
   "permissions": [
     "storage"

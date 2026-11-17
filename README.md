@@ -97,6 +97,7 @@ Firefox removes temporary add-ons when it restarts.
 - Bookmark problems and pick a random problem.
 - Hide tags or difficulty while practicing.
 - Connect a Codeforces handle to filter solved and attempted problems.
+- Automatically sync new submissions when opening or returning to the archive, at most once every 5 minutes.
 - Choose how many problems appear per page.
 
 Use **Original archive** to return to the standard Codeforces table.

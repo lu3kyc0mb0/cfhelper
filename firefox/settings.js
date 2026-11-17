@@ -47,12 +47,13 @@ globalThis.CFSettings = (container, initial, callbacks = {}) => {
       field('language',select([['en','English'],['ru','Русский']],prefs.language,{'data-role':'language',onchange:e=>change({language:e.target.value},true)})),
       field('pageSize',select([25,50,100].map(n=>[String(n),String(n)]),String(prefs.pageSize),{'data-role':'page-size',onchange:e=>change({pageSize:Number(e.target.value)})})));
     const compact=el('label',{class:'cfh-check'},el('input',{type:'checkbox',checked:prefs.compact,onchange:e=>change({compact:e.target.checked})}),t('compact'));
+    const autoSync=el('label',{class:'cfh-check'},el('input',{type:'checkbox',checked:prefs.autoSync,onchange:e=>change({autoSync:e.target.checked})}),t('autoSync'));
     const handle=el('input',{type:'text',value:handleDraft ?? history?.handle ?? '',maxLength:24,placeholder:'tourist','data-role':'handle',disabled:busy});
     const profileTools=el('div',{class:'cfh-actions'},field('handle',handle),button('sync',()=>loadHistory(false),{disabled:busy}),button('older',()=>loadHistory(true),{disabled:busy || !history || history.complete}),button('disconnect',async()=>{
       try {await browser.storage.local.remove('profileCache');history=null;callbacks.onHistory?.(null);message='historyCleared';failed=false;render();}catch{notice('saveError',true);}
     },{disabled:busy || !history}));
     const dataTools=el('div',{class:'cfh-actions'},button('exportResults',()=>exportProblems(false)),button('exportBookmarks',()=>exportProblems(true)));
-    container.append(title,el('section',{class:'cfh-settings-section'},el('h3',{},t('archiveSettings')),general,compact),el('section',{class:'cfh-settings-section'},el('h3',{},t('profile')),profileTools,el('p',{class:'cfh-hint'},t('historyHint')),el('p',{'data-role':'coverage',class:'cfh-hint'},coverage())),el('section',{class:'cfh-settings-section'},el('h3',{},t('data')),dataTools,el('p',{class:'cfh-hint'},t('exportHint'))),el('p',{'data-role':'settings-status',role:'status',class:failed?'cfh-status error':'cfh-status'},message?t(message):''));
+    container.append(title,el('section',{class:'cfh-settings-section'},el('h3',{},t('archiveSettings')),general,compact),el('section',{class:'cfh-settings-section'},el('h3',{},t('profile')),profileTools,autoSync,el('p',{class:'cfh-hint'},t('autoSyncHint')),el('p',{class:'cfh-hint'},t('historyHint')),el('p',{'data-role':'coverage',class:'cfh-hint'},coverage())),el('section',{class:'cfh-settings-section'},el('h3',{},t('data')),dataTools,el('p',{class:'cfh-hint'},t('exportHint'))),el('p',{'data-role':'settings-status',role:'status',class:failed?'cfh-status error':'cfh-status'},message?t(message):''));
   }
   render();
   browser.storage.local.get('profileCache').then(saved=>{history=saved.profileCache || null;render();}).catch(()=>notice('readError',true));

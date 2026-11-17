@@ -1,7 +1,7 @@
 globalThis.CFUI = (() => {
-  const defaults = { language:'en', pageSize:50, compact:false };
+  const defaults = { language:'en', pageSize:50, compact:false, autoSync:true };
   function cleanPrefs(value = {}) {
-    return { language: value.language === 'ru' ? 'ru' : 'en', pageSize:[25,50,100].includes(Number(value.pageSize)) ? Number(value.pageSize) : 50, compact:value.compact === true };
+    return { language: value.language === 'ru' ? 'ru' : 'en', pageSize:[25,50,100].includes(Number(value.pageSize)) ? Number(value.pageSize) : 50, compact:value.compact === true, autoSync:value.autoSync !== false };
   }
   function el(tag, attrs = {}, ...children) {
     const node = document.createElement(tag);

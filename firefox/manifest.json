@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CF Helper",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "Native archive filters, bookmarks, practice history and more for Codeforces.",
   "browser_specific_settings": {"gecko": {"id": "cfhelper@lu3kyc0mb0", "strict_min_version": "140.0", "data_collection_permissions": {"required": ["authenticationInfo"]}}},
   "permissions": ["storage"],

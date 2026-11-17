@@ -92,8 +92,13 @@
     const old=prefs;prefs=cleanPrefs(next);applyLayout(prefs);
     if(old.language!==prefs.language)renderUI();
     if(active && (old.pageSize!==prefs.pageSize || old.language!==prefs.language))apply();
+    if(!old.autoSync && prefs.autoSync)syncHistory();
   }
-  function historyChanged(next){history=next;if(!history)filters.accepted='all';syncControls();if(active)apply();}
+  function historyChanged(next){history=next;if(!history)filters.accepted='all';syncControls();$('coverage').textContent=historyText();$('coverage').hidden=!history;if(active)apply();}
+  function syncHistory(){
+    if(!initialized || document.visibilityState==='hidden' || !prefs.autoSync || !history?.handle)return;
+    chrome.runtime.sendMessage({type:'profile-auto'}).catch(()=>{});
+  }
   function renderUI(){
     host.replaceChildren();toolbar.replaceChildren();host.lang=prefs.language;toolbar.lang=prefs.language;host.setAttribute('aria-label',t('filters'));toolbar.setAttribute('aria-label',t('toolbar'));
     const sort=select(['newest','oldest','ratingAsc','ratingDesc','popular','rare','name'].map(k=>[k,t(k)]),filters.sort,{name:'sort','data-role':'sort',disabled:!initialized,onchange:async e=>{filters.sort=e.target.value;wanted=true;$('restore').hidden=false;if(ready)apply();else{save({filters:structuredClone(filters)});await load();}}});
@@ -122,6 +127,7 @@
   chrome.storage.local.get(['preferences','filters','favorites','presets','profileCache']).then(saved=>{
     prefs=cleanPrefs(saved.preferences);filters=cleanFilters(saved.filters);favorites=saved.favorites || [];presets=(saved.presets || []).map(p=>({...p,filters:cleanFilters(p.filters)}));history=saved.profileCache || null;
     initialized=true;applyLayout(prefs);renderUI();
+    syncHistory();
     chrome.storage.local.remove('progress').catch(()=>{});
   }).catch(()=>{initialized=true;renderUI();status('readError',true);});
   chrome.storage.onChanged?.addListener((changes,area)=>{
@@ -129,4 +135,7 @@
     if(changes.preferences){const next=cleanPrefs(changes.preferences.newValue);if(JSON.stringify(next)!==JSON.stringify(prefs)){preferencesChanged(next);}}
     if(changes.profileCache){historyChanged(changes.profileCache.newValue || null);}
   });
+  document.addEventListener('visibilitychange',syncHistory);
+  window.addEventListener('focus',syncHistory);
+  window.addEventListener('pageshow',syncHistory);
 })();
